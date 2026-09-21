@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap, Film, Calendar, Flag, Clock, ArrowRight } from 'lucide-react';
+import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap, Film, Calendar, Flag, Clock, ArrowLeft, ArrowRight, FileText, Quote } from 'lucide-react';
 import { AppLanguage, Game } from '../lib/types';
 import { getText } from '../lib/i18n';
 
@@ -100,11 +100,13 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
   };
   const clearedCount = useMemo(() => games.filter((item) => item.status === 'Cleared').length, [games]);
 
-  const visibleGames = games.filter((item) => {
-    const matchesSearch = item.title.toLowerCase().includes(gameSearch.trim().toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const visibleGames = games
+    .filter((item) => {
+      const matchesSearch = item.title.toLowerCase().includes(gameSearch.trim().toLowerCase());
+      const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   const activeFilterLabel = statusFilter === 'ALL' ? 'ALL GAMES' : statusFilter.toUpperCase();
   const statusClass = (status: Game['status']) => `status-${status.toLowerCase().replace(' ', '-')}`;
@@ -187,7 +189,7 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                 </p>
               </div>
             )}
-            {visibleGames.map((item, index) => (
+            {visibleGames.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {
@@ -195,21 +197,47 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                   setMobileView('detail');
                 }}
                 className={`quest-entry ${game?.id === item.id ? 'is-selected' : ''}`}
-                style={{ ['--delay' as any]: `${index * 40}ms` }}
               >
-                <span className="quest-dot" />
-                <span className="quest-copy">
-                  <strong>{item.title}</strong>
-                  <small>{formatPlatform(item.platform)} &nbsp;•&nbsp; {item.duration_days ? `${item.duration_days} Days` : '--'}</small>
-                  <em>Rank: {item.difficulty || 'NORMAL'}</em>
-                </span>
-                <span className="quest-entry-right">
-                  <span className={`quest-status ${statusClass(item.status)}`}>{item.status.toUpperCase()}</span>
-                  <span className="zzz-go-pill">
-                    <span className="zzz-go-circle">›</span>
-                    <span className="zzz-go-text">Go</span>
-                  </span>
-                </span>
+                <div className="quest-thumb-wrap">
+                  {item.cover_image_url ? (
+                    <img
+                      src={item.cover_image_url}
+                      alt=""
+                      className="quest-thumb-img"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  <div className="quest-thumb-fallback">
+                    <Gamepad2 size={16} className="text-zinc-500" />
+                  </div>
+                </div>
+
+                <div className="quest-content">
+                  <div className="quest-title-row">
+                    <strong className="quest-title" title={item.title}>
+                      {item.title}
+                    </strong>
+                    <span className={`quest-status ${statusClass(item.status)}`}>
+                      {item.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="quest-meta-row">
+                    <span className="quest-meta-platform">{formatPlatform(item.platform)}</span>
+                    <span className="quest-meta-sep">•</span>
+                    <span className="quest-meta-duration">
+                      {item.duration_days ? `${item.duration_days} Days` : '--'}
+                    </span>
+                    {item.difficulty && (
+                      <>
+                        <span className="quest-meta-sep">•</span>
+                        <span className="quest-meta-rank">RK: {item.difficulty}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </button>
             ))}
           </div>
@@ -218,8 +246,8 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
         {game ? (
           <main className="journal-sheet">
             <div className="sheet-toolbar">
-              <button className="mobile-back-to-list" onClick={() => setMobileView('list')} aria-label="Back to game list">
-                <span className="back-chevron">‹</span>
+              <button className="mobile-back-to-list zzz-sheet-btn" onClick={() => setMobileView('list')} aria-label="Back to game list">
+                <ArrowLeft size={12} className="btn-icon" />
                 <span>Game List</span>
               </button>
               <div className="sheet-toolbar-actions">
@@ -237,9 +265,21 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
             <div className="sheet-scroll-content">
               <section className="journal-profile">
                 <div className="journal-cover">
-                  <div className="journal-cover-frame">
+                  <button
+                    className="journal-cover-frame journal-cover-btn"
+                    onClick={() => game.cover_image_url && onOpenProof?.(game.cover_image_url, game.title)}
+                    title="Click to expand cover"
+                    disabled={!game.cover_image_url}
+                  >
                     <img src={game.cover_image_url} alt={game.title} />
-                  </div>
+                    {game.cover_image_url && (
+                      <div className="cover-expand-hint">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                      </div>
+                    )}
+                  </button>
                   <div className="journal-cover-meta">
                     <span className="cover-badge">[ SPECIMEN ARCHIVE ]</span>
                   </div>
@@ -423,8 +463,21 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
 
               {game.notes && (
                 <section className="memo-section">
-                  <h3>TACTICAL OPERATOR LOG</h3>
-                  <p className="break-words whitespace-pre-wrap">"{game.notes}"</p>
+                  <div className="memo-header">
+                    <div className="memo-tag-pill">
+                      <FileText size={12} className="text-[#FF7A00]" />
+                      <span>OP-LOG</span>
+                    </div>
+                    <h3 className="memo-title">TACTICAL OPERATOR LOG</h3>
+                  </div>
+                  <div className="memo-body">
+                    <Quote size={18} className="memo-quote-icon" />
+                    <p className="memo-text break-words whitespace-pre-wrap">{game.notes}</p>
+                  </div>
+                  <div className="memo-footer">
+                    <span className="memo-footer-dot" />
+                    <span className="memo-footer-label">FIELD ARCHIVE // ENCRYPTED ENTRY</span>
+                  </div>
                 </section>
               )}
             </div>
