@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface ProofLightboxProps {
   isOpen: boolean;
@@ -48,15 +48,6 @@ export const ProofLightbox: React.FC<ProofLightboxProps> = ({
             </h3>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={imageUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="w-8 h-8 rounded-full border border-[#2B2D38] bg-[#181920] text-zinc-400 hover:text-[#FFDE00] hover:border-[#FFDE00] flex items-center justify-center transition-colors cursor-pointer"
-              title="Open full resolution in new tab"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
             <button
               onClick={handleClose}
               className="w-8 h-8 rounded-full border border-[#2B2D38] bg-[#181920] text-zinc-400 hover:text-white hover:border-[#4C5066] flex items-center justify-center transition-colors cursor-pointer"
