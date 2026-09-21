@@ -71,9 +71,9 @@ export const GameGrid: React.FC<GameGridProps> = ({
     <div className="w-full flex flex-col space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3 px-1 pb-3 border-b border-slate-800/70">
         <div className="flex flex-wrap items-end gap-3">
-          <h1 className="font-cinzel text-lg font-bold tracking-[0.16em] text-white uppercase">Clear</h1>
+          <h1 className="font-['Outfit'] text-lg font-black tracking-[0.12em] text-white uppercase italic">Clear</h1>
           <div className="hud-filterbar flex flex-wrap items-center gap-2 px-3 py-2">
-          <span className="text-[11px] sm:text-xs font-bold text-slate-300 font-tactical tracking-[0.25em] uppercase">
+          <span className="text-[11px] sm:text-xs font-black text-slate-300 font-['Outfit'] tracking-[0.15em] uppercase">
             {t.filterBy}
           </span>
 
@@ -221,7 +221,7 @@ export const GameGrid: React.FC<GameGridProps> = ({
 
                 <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-2.5">
                   <div>
-                  <h4 className="text-[11px] font-bold text-slate-100 font-tactical tracking-[0.14em] uppercase truncate group-hover:text-brand-orange transition-colors">
+                  <h4 className="text-[11px] font-bold text-slate-100 font-['Outfit'] tracking-[0.06em] uppercase truncate group-hover:text-[#FFDE00] transition-colors">
                     {game.title}
                   </h4>
 

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap } from 'lucide-react';
+import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap, Film, Calendar, Flag, Clock, ArrowRight } from 'lucide-react';
 import { AppLanguage, Game } from '../lib/types';
 import { getText } from '../lib/i18n';
 
@@ -176,7 +176,17 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
             </div>
           </div>
           <div className="quest-list">
-            {visibleGames.length === 0 && <p className="journal-empty">No matching games found.</p>}
+            {visibleGames.length === 0 && (
+              <div className="journal-empty">
+                <div className="journal-empty-icon">
+                  <Search size={22} strokeWidth={2.2} />
+                </div>
+                <h4 className="journal-empty-title">NO MATCHING ENTRIES</h4>
+                <p className="journal-empty-desc">
+                  No records match current query or status filter.
+                </p>
+              </div>
+            )}
             {visibleGames.map((item, index) => (
               <button
                 key={item.id}
@@ -300,24 +310,70 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
 
               {hasMilestones && (
                 <section className="journey-section">
-                  <h3>COMMISSION LOG [ARCHIVE RECORD]</h3>
+                  <div className="journey-section-header">
+                    <span className="journey-section-tag">T-LOG</span>
+                    <h3>COMMISSION TIMELINE</h3>
+                  </div>
                   <div className="milestone-strip">
-                    <div className="milestone-cell">
-                      <span className="milestone-label">DEPARTURE (START DATE)</span>
-                      <strong className="break-words">{formatDate(game.started_on, '—')}</strong>
-                      <small>First boot / campaign opened</small>
+                    {/* Departure / Start */}
+                    <div className="milestone-cell milestone-start">
+                      <div className="milestone-meta-row">
+                        <div className="milestone-icon-pill">
+                          <Calendar size={13} className="text-[#FFDE00]" />
+                        </div>
+                        <span className="milestone-label">DEPARTURE DATE</span>
+                      </div>
+                      <strong className="milestone-date">{formatDate(game.started_on, '—')}</strong>
+                      <div className="milestone-status-sub">
+                        <span className="milestone-sub-dot" />
+                        <span>Mission Deployed</span>
+                      </div>
                     </div>
+
+                    {/* Telemetry Flow Connector */}
                     <div className="milestone-divider">
-                      <span className="milestone-track">──›</span>
+                      <div className="milestone-connector-line" />
+                      <div className="milestone-arrow-badge">
+                        <ArrowRight size={14} className="text-[#FFDE00]" />
+                      </div>
+                      <div className="milestone-connector-line" />
                     </div>
-                    <div className="milestone-cell">
-                      <span className="milestone-label">CONQUERED (FINISH DATE)</span>
-                      <strong className="break-words">{formatDate(game.finished_on, '—')}</strong>
-                      <small>Credits roll / save file verified</small>
+
+                    {/* Conquered / Finish */}
+                    <div className="milestone-cell milestone-end">
+                      <div className="milestone-meta-row">
+                        <div className="milestone-icon-pill">
+                          <Flag size={13} className="text-[#FFDE00]" />
+                        </div>
+                        <span className="milestone-label">CONQUERED DATE</span>
+                      </div>
+                      <strong className="milestone-date">{formatDate(game.finished_on, '—')}</strong>
+                      <div className="milestone-status-sub">
+                        <span className={`milestone-sub-dot ${game.status === 'Cleared' ? 'dot-cleared' : ''}`} />
+                        <span>{game.status === 'Cleared' ? 'Campaign Cleared' : 'Active Campaign'}</span>
+                      </div>
                     </div>
-                    <div className="duration-note">
-                      <span className="duration-label">TOTAL TIME SPENT</span>
-                      <strong className="duration-val">{game.duration_days ? `${game.duration_days} DAYS` : '—'}</strong>
+
+                    {/* Tactical Duration Meter Card */}
+                    <div className="duration-card">
+                      <div className="duration-card-head">
+                        <Clock size={11} className="text-[#FFDE00]" />
+                        <span className="duration-card-label">TOTAL DURATION</span>
+                      </div>
+                      <div className="duration-card-body">
+                        <span className="duration-card-val">
+                          {game.duration_days ? game.duration_days : '—'}
+                        </span>
+                        <span className="duration-card-unit">
+                          {game.duration_days === 1 ? 'DAY' : 'DAYS'}
+                        </span>
+                      </div>
+                      <div className="duration-card-ticker">
+                        <span className="ticker-seg active" />
+                        <span className="ticker-seg active" />
+                        <span className="ticker-seg active" />
+                        <span className="ticker-seg" />
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -336,8 +392,8 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                       >
                         {/* Left Stub Track */}
                         <div className="zzz-ticket-left">
-                          <span className="zzz-ticket-vert-text">CINEMA</span>
-                          <span className="zzz-ticket-logo">ZZZ</span>
+                          <span className="zzz-ticket-vert-text">SNAPSHOT</span>
+                          <span className="zzz-ticket-logo">REC</span>
                         </div>
 
                         {/* Center Photo Window (No text below) */}
@@ -347,14 +403,16 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
 
                         {/* Right Ticket Stub */}
                         <div className="zzz-ticket-right">
-                          <div className="zzz-ticket-badge">Z</div>
+                          <div className="zzz-ticket-badge">
+                            <Film size={13} strokeWidth={2.2} />
+                          </div>
                           <div className="zzz-ticket-number">
                             <span>№</span>
                             <strong>0{index + 1}</strong>
                           </div>
                           <div className="zzz-ticket-barcode-wrap">
                             <div className="zzz-ticket-barcode" />
-                            <span className="zzz-ticket-eridu">NEW ERIDU</span>
+                            <span className="zzz-ticket-eridu">VERIFIED</span>
                           </div>
                         </div>
                       </div>

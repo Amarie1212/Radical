@@ -70,7 +70,7 @@ export const LeftRailArc: React.FC<LeftRailArcProps> = ({
 
       <div className="arc-dock hidden lg:flex w-[155px] h-full flex-col gap-4 px-3 py-5 relative overflow-hidden">
         <div className="flex items-center justify-between px-1">
-          <span className="font-tactical text-[10px] font-bold tracking-[0.28em] text-slate-300 uppercase">Memory Archive</span>
+          <span className="font-['Outfit'] text-[10px] font-bold tracking-[0.2em] text-slate-300 uppercase">Memory Archive</span>
           <span className="text-[9px] text-cyan-300 font-mono">{String(games.length).padStart(2, '0')}</span>
         </div>
 
@@ -94,8 +94,8 @@ export const LeftRailArc: React.FC<LeftRailArcProps> = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#07101a] via-transparent to-transparent" />
                 <div className="absolute inset-x-2 bottom-1.5">
-                  <div className="truncate text-[10px] font-bold uppercase tracking-[0.1em] text-white">{game.title}</div>
-                  <div className="truncate text-[8px] font-tactical uppercase tracking-[0.16em] text-slate-400">{game.status}</div>
+                  <div className="truncate text-[10px] font-bold uppercase tracking-[0.1em] text-white font-['Outfit']">{game.title}</div>
+                  <div className="truncate text-[8px] font-['Outfit'] font-semibold uppercase tracking-[0.14em] text-slate-400">{game.status}</div>
                 </div>
               </button>
             );

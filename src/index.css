@@ -208,11 +208,20 @@ html[data-theme='dark'] {
 }
 
 
+html,
 body {
   background: var(--paper-deep);
   color: var(--ink);
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Interactive transitions */
@@ -390,7 +399,7 @@ a:active,
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   box-sizing: border-box;
 }
 
@@ -642,6 +651,52 @@ a:active,
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ── Tactical ZZZ Empty State (media_1789963242958.png) ── */
+.journal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 44px 20px;
+  background: #14151E;
+  border: 1.5px dashed #2B2E40;
+  border-radius: 16px;
+  margin: 12px 2px;
+  box-sizing: border-box;
+}
+
+.journal-empty-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #191B26;
+  border: 1.5px solid #2F3348;
+  display: grid;
+  place-items: center;
+  color: #FFDE00;
+  margin-bottom: 12px;
+}
+
+.journal-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin: 0 0 4px;
+}
+
+.journal-empty-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #71758A;
+  margin: 0;
+  line-height: 1.45;
 }
 
 /* Authentic ZZZ List Item (media_1789921077415.png & media_1789920199591.png) */
@@ -996,6 +1051,7 @@ a:active,
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #8E92A4;
+  white-space: nowrap;
 }
 
 .journal-profile-copy {
@@ -1093,117 +1149,220 @@ a:active,
 }
 
 /* Commission Log / Milestones */
+/* ── Tactical Commission Timeline Strip (ZZZ Style) ── */
 .journey-section {
-  margin-top: 24px;
+  margin-top: 26px;
+}
+
+.journey-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(255, 222, 0, 0.22);
+  padding-bottom: 6px;
+}
+
+.journey-section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #0E0F14;
+  background: #FFDE00;
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
 .journey-section h3 {
-  margin: 0 0 12px;
-  border-bottom: 1px dashed rgba(255, 222, 0, 0.25);
-  padding-bottom: 6px;
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
-  font-weight: 800;
-  color: #FFDE00;
-  letter-spacing: 0.08em;
+  font-weight: 900;
+  font-style: italic;
+  color: #FFFFFF;
+  letter-spacing: 0.06em;
 }
 
 .milestone-strip {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1.2fr) minmax(160px, auto);
-  align-items: center;
+  grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1.2fr) minmax(180px, auto);
+  align-items: stretch;
   gap: 16px;
-  border: 1.5px solid #2A2D3C;
-  background: #151622;
+  border: 1.5px solid #2B2E40;
+  background: linear-gradient(135deg, #151622 0%, #11121A 100%);
   padding: 16px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
 }
 
 .milestone-strip .milestone-cell {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
+}
+
+.milestone-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.milestone-icon-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #1A1C28;
+  border: 1px solid #2E3246;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .milestone-strip .milestone-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #71758A;
-}
-
-.milestone-strip strong {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(15px, 1.3vw, 18px);
-  line-height: 1.2;
-  color: #FFFFFF;
   font-weight: 800;
-}
-
-.milestone-strip small {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #8E92A4;
 }
 
+.milestone-date {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.2;
+  color: #FFFFFF;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  margin: 2px 0;
+}
+
+.milestone-status-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #71758A;
+}
+
+.milestone-sub-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #71758A;
+}
+
+.milestone-sub-dot.dot-cleared {
+  background: #FFDE00;
+  box-shadow: 0 0 6px rgba(255, 222, 0, 0.6);
+}
+
+/* Telemetry Flow Connector */
 .milestone-divider {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 0 4px;
 }
 
-.milestone-track {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
-  font-weight: 800;
-  color: #FFDE00;
-  letter-spacing: -2px;
+.milestone-connector-line {
+  width: 14px;
+  height: 1px;
+  background: #2E3246;
 }
 
-.duration-note {
-  border: 2px solid #FFDE00;
-  background: #FFDE00;
-  color: #000000;
-  padding: 10px 20px;
-  border-radius: 8px;
-  transform: skewX(-8deg);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+.milestone-arrow-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #181A26;
+  border: 1.5px solid #2F3348;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Tactical Duration Meter Card */
+.duration-card {
+  border: 1.5px solid #333648;
+  background: #171824;
+  padding: 10px 16px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  min-width: 130px;
+  justify-content: space-between;
+  min-width: 150px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
 }
 
-.duration-note .duration-label,
-.duration-note span {
-  display: block;
+.duration-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duration-card-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #000000;
-  transform: skewX(8deg);
   text-transform: uppercase;
+  color: #8E92A4;
 }
 
-.duration-note .duration-val,
-.duration-note strong {
-  display: block;
+.duration-card-body {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 4px 0 6px;
+}
+
+.duration-card-val {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(26px, 2.4vw, 36px) !important;
+  font-size: clamp(28px, 2.6vw, 38px);
   font-weight: 900;
   font-style: italic;
   line-height: 1;
-  color: #000000 !important;
-  letter-spacing: -0.01em;
-  transform: skewX(8deg);
-  margin-top: 2px;
+  color: #FFDE00;
+  letter-spacing: -0.02em;
+}
+
+.duration-card-unit {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: #FFFFFF;
+}
+
+.duration-card-ticker {
+  display: flex;
+  gap: 3px;
+}
+
+.ticker-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: #252838;
+}
+
+.ticker-seg.active {
+  background: #FFDE00;
+  box-shadow: 0 0 4px rgba(255, 222, 0, 0.4);
 }
 
 /* Proofs / Surveillance Snapshot Section */
@@ -1213,42 +1372,44 @@ a:active,
 
 .proof-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 20px;
   align-items: start;
 }
 
-/* Authentic ZZZ Cinema Ticket Card (media_1789924981931.png) */
+/* ── Tactical Dark Cinema Ticket Card (Screenshot Reference: media_1789963255418.png) ── */
 .zzz-cinema-card {
   position: relative;
   display: flex;
   align-items: stretch;
-  background: linear-gradient(135deg, #FFFFFF 0%, #EFF2F7 50%, #E3E7F0 100%);
-  border: 1.5px solid #D1D6E2;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #171824 0%, #13141E 50%, #0E0F16 100%);
+  border: 1.5px solid #2B2E40;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-  min-height: 120px;
+  min-height: 190px;
+  max-width: 640px;
+  width: 100%;
 }
 
 .zzz-cinema-card:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+  transform: translateY(-3px) scale(1.008);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 16px rgba(255, 222, 0, 0.15);
   border-color: #FFDE00;
 }
 
 /* Left Ticket Track */
 .zzz-ticket-left {
-  width: 22px;
+  width: 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-right: 1px solid rgba(190, 198, 212, 0.7);
-  background: rgba(255, 255, 255, 0.5);
+  padding: 12px 0;
+  border-right: 1px solid #242636;
+  background: #181A26;
   flex-shrink: 0;
   position: relative;
 }
@@ -1257,14 +1418,14 @@ a:active,
 .zzz-ticket-left::before {
   content: '';
   position: absolute;
-  left: -5px;
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 8px;
-  height: 16px;
-  border-radius: 0 8px 8px 0;
-  background: #121215;
-  border: 1px solid #D1D6E2;
+  width: 10px;
+  height: 20px;
+  border-radius: 0 10px 10px 0;
+  background: #0E0E12;
+  border: 1px solid #2B2E40;
   border-left: none;
 }
 
@@ -1273,9 +1434,9 @@ a:active,
   transform: rotate(180deg);
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 8px;
-  letter-spacing: 0.22em;
-  color: #7B889B;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: #71758A;
   text-transform: uppercase;
 }
 
@@ -1283,20 +1444,20 @@ a:active,
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
   font-style: italic;
-  font-size: 7px;
-  color: #7B889B;
-  letter-spacing: 0.04em;
+  font-size: 10px;
+  color: #FFDE00;
+  letter-spacing: 0.06em;
 }
 
 /* Center Photo Frame */
 .zzz-ticket-media {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 6px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(235, 240, 246, 0.4);
+  background: #0E0F16;
 }
 
 .zzz-ticket-media img {
@@ -1305,21 +1466,20 @@ a:active,
   height: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid rgba(180, 188, 204, 0.8);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  border: 1px solid #252838;
 }
 
 /* Right Ticket Stub */
 .zzz-ticket-right {
-  width: 48px;
+  width: 70px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 4px;
-  border-left: 1px dashed rgba(180, 188, 204, 0.8);
-  background: rgba(255, 255, 255, 0.6);
+  padding: 12px 8px;
+  border-left: 1.5px dashed #282B3D;
+  background: #181A26;
   flex-shrink: 0;
   position: relative;
 }
@@ -1328,34 +1488,37 @@ a:active,
 .zzz-ticket-right::before {
   content: '';
   position: absolute;
-  top: -5px;
-  left: -5px;
-  width: 10px;
-  height: 10px;
+  top: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #121215;
-  border-bottom: 1px solid #D1D6E2;
+  background: #0E0E12;
+  border-bottom: 1px solid #2B2E40;
 }
 
 .zzz-ticket-right::after {
   content: '';
   position: absolute;
-  bottom: -5px;
-  left: -5px;
-  width: 10px;
-  height: 10px;
+  bottom: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #121215;
-  border-top: 1px solid #D1D6E2;
+  background: #0E0E12;
+  border-top: 1px solid #2B2E40;
 }
 
 .zzz-ticket-badge {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  font-style: italic;
-  font-size: 16px;
-  color: #8A97A8;
-  line-height: 1;
+  color: #FFDE00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zzz-ticket-badge svg {
+  width: 18px;
+  height: 18px;
 }
 
 .zzz-ticket-number {
@@ -1363,53 +1526,52 @@ a:active,
   flex-direction: column;
   align-items: center;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
-  color: #7B889B;
+  color: #71758A;
   line-height: 1.1;
   margin: 4px 0;
 }
 
 .zzz-ticket-number strong {
-  font-size: 11px;
-  color: #4A5568;
+  font-size: 16px;
+  color: #FFFFFF;
 }
 
 .zzz-ticket-barcode-wrap {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   width: 100%;
   justify-content: center;
 }
 
 .zzz-ticket-barcode {
-  width: 22px;
-  height: 28px;
+  width: 30px;
+  height: 44px;
   background: repeating-linear-gradient(
     90deg,
-    #4A5568 0px,
-    #4A5568 1.5px,
+    #585E78 0px,
+    #585E78 1.5px,
     transparent 1.5px,
     transparent 3px,
-    #4A5568 3px,
-    #4A5568 4px,
+    #585E78 3px,
+    #585E78 4px,
     transparent 4px,
     transparent 5.5px,
-    #4A5568 5.5px,
-    #4A5568 7px
+    #585E78 5.5px,
+    #585E78 7px
   );
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .zzz-ticket-eridu {
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 6px;
-  letter-spacing: 0.12em;
-  color: #8A97A8;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: #71758A;
   white-space: nowrap;
 }
 
@@ -2169,11 +2331,11 @@ html[data-theme='dark'] .zzz-modal-window {
   }
 
   .milestone-strip {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
   }
 
-  .duration-note {
+  .duration-card {
     grid-column: 1 / -1;
   }
 }
@@ -2281,7 +2443,8 @@ html[data-theme='dark'] .zzz-modal-window {
   }
 
   .journal-cover {
-    width: 140px;
+    width: 100%;
+    max-width: 230px;
     margin: 0 auto;
   }
 
@@ -2303,29 +2466,97 @@ html[data-theme='dark'] .zzz-modal-window {
 
   .milestone-strip {
     grid-template-columns: 1fr;
-    gap: 8px;
-    text-align: center;
-    padding: 10px 12px;
+    gap: 14px;
+    padding: 14px 16px;
   }
 
-  .milestone-strip div {
-    align-items: center;
+  .milestone-strip .milestone-cell {
+    align-items: flex-start;
   }
 
-  .milestone-arrow {
+  .milestone-divider {
     transform: rotate(90deg);
-    margin: 0 auto;
+    margin: 4px auto;
   }
 
-  .duration-note {
+  .duration-card {
     width: 100%;
     box-sizing: border-box;
-    text-align: center;
   }
 
   .proof-row {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 14px;
+  }
+
+  .zzz-cinema-card {
+    min-height: 165px;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .zzz-ticket-left {
+    width: 28px;
+    padding: 10px 0;
+  }
+
+  .zzz-ticket-vert-text {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+  }
+
+  .zzz-ticket-logo {
+    font-size: 9px;
+  }
+
+  .zzz-ticket-media {
+    padding: 8px;
+  }
+
+  .zzz-ticket-media img {
+    border-radius: 6px;
+  }
+
+  .zzz-ticket-right {
+    width: 56px;
+    padding: 10px 6px;
+  }
+
+  .zzz-ticket-right::before,
+  .zzz-ticket-right::after {
+    width: 12px;
+    height: 12px;
+    left: -6px;
+  }
+
+  .zzz-ticket-right::before {
+    top: -6px;
+  }
+
+  .zzz-ticket-right::after {
+    bottom: -6px;
+  }
+
+  .zzz-ticket-badge svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .zzz-ticket-number {
+    font-size: 9px;
+  }
+
+  .zzz-ticket-number strong {
+    font-size: 13px;
+  }
+
+  .zzz-ticket-barcode {
+    height: 36px;
+  }
+
+  .zzz-ticket-eridu {
+    font-size: 7px;
+    letter-spacing: 0.14em;
   }
 
   .profile-notebook {

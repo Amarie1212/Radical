@@ -42,8 +42,12 @@ export default {
         }
       },
       fontFamily: {
-        cinzel: ['Cinzel', 'Georgia', 'serif'],
-        tactical: ['Rajdhani', 'Segoe UI', 'sans-serif'],
+        sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        cinzel: ['Outfit', 'sans-serif'],
+        tactical: ['Outfit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       boxShadow: {
         'neon-orange': '0 0 15px rgba(249, 115, 22, 0.4), 0 0 30px rgba(249, 115, 22, 0.2)',

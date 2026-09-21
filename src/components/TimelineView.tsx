@@ -37,8 +37,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     <div className="w-full flex flex-col space-y-6 sm:space-y-8 pb-10">
       <div className="w-full max-w-4xl mx-auto mt-2">
         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-800">
-          <Clock className="w-4 h-4 text-brand-orange" />
-          <h2 className="font-cinzel text-sm sm:text-base font-bold uppercase tracking-wider text-slate-200">
+          <Clock className="w-4 h-4 text-[#FFDE00]" />
+          <h2 className="font-['Outfit'] text-sm sm:text-base font-black uppercase italic tracking-wider text-white">
             CHRONOLOGICAL CONQUEST LOG
           </h2>
         </div>
@@ -81,10 +81,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       }}
                     />
                     <div>
-                      <h4 className="font-cinzel text-sm sm:text-base font-bold text-white group-hover:text-copper-shine transition-colors">
+                      <h4 className="font-['Outfit'] text-sm sm:text-base font-bold text-white group-hover:text-[#FFDE00] transition-colors">
                         {g.title}
                       </h4>
-                      <p className="text-xs text-copper-shine font-tactical">
+                      <p className="text-xs text-[#FFDE00] font-['Outfit'] font-semibold">
                         {g.platform}
                       </p>
                     </div>

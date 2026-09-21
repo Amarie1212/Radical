@@ -27,12 +27,6 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
   const avgDuration = durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
   const totalDaysPlayed = durations.reduce((a, b) => a + b, 0);
 
-  // Platform Distribution
-  const platformCounts: Record<string, number> = {};
-  games.forEach((g) => {
-    platformCounts[g.platform] = (platformCounts[g.platform] || 0) + 1;
-  });
-
   return (
     <div className="w-full flex flex-col space-y-6 pb-12">
       {/* 1. Trophy Header Banner */}
@@ -40,21 +34,21 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
         <div className="absolute right-0 top-0 bottom-0 w-96 bg-gradient-to-l from-orange-600/10 to-transparent pointer-events-none" />
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="flex items-center gap-2 text-copper-shine text-xs font-tactical font-bold tracking-widest uppercase">
-              <Trophy className="w-4 h-4 text-brand-orange" />
+            <div className="flex items-center gap-2 text-[#FFDE00] text-xs font-outfit font-bold tracking-widest uppercase">
+              <Trophy className="w-4 h-4 text-[#FFDE00]" />
               <span>{language === 'en' ? 'HALL OF ACHIEVEMENTS & MASTER MEMORIALS' : 'HALL OF ACHIEVEMENTS & MASTER MEMORIALS'}</span>
             </div>
-            <h1 className="font-cinzel text-2xl sm:text-3xl font-black text-white mt-1 copper-text-gradient">
+            <h1 className="font-outfit text-2xl sm:text-3xl font-black italic tracking-tight text-white mt-1">
               HALL OF FAME PLAQUES
             </h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-lg">
+            <p className="text-xs text-slate-400 mt-1 max-w-lg font-outfit">
               Every game you complete is immortalized with an engraved copper plaque in the cloud database.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="bg-black/40 border border-copper-border/60 px-4 py-2.5 rounded-xl text-center">
-              <span className="text-[10px] text-slate-400 block font-tactical uppercase">COMPLETION RATE</span>
+            <div className="bg-black/40 border border-slate-800 px-4 py-2.5 rounded-xl text-center">
+              <span className="text-[10px] text-slate-400 block font-outfit font-bold uppercase tracking-wider">COMPLETION RATE</span>
               <span className="text-xl font-bold font-mono text-emerald-400">
                 {games.length > 0 ? Math.round((totalCleared / games.length) * 100) : 0}%
               </span>
@@ -70,7 +64,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-tactical uppercase">CLEARED GAMES</div>
+            <div className="text-[10px] text-slate-400 font-outfit font-bold uppercase tracking-wider">CLEARED GAMES</div>
             <div className="text-xl font-bold text-white font-mono">{totalCleared}</div>
           </div>
         </div>
@@ -80,7 +74,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
             <Gamepad2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-tactical uppercase">{t.inProgress}</div>
+            <div className="text-[10px] text-slate-400 font-outfit font-bold uppercase tracking-wider">{t.inProgress}</div>
             <div className="text-xl font-bold text-white font-mono">{inProgressGames.length}</div>
           </div>
         </div>
@@ -90,7 +84,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
             <Clock className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-tactical uppercase">{t.avgDuration}</div>
+            <div className="text-[10px] text-slate-400 font-outfit font-bold uppercase tracking-wider">{t.avgDuration}</div>
             <div className="text-xl font-bold text-white font-mono">{avgDuration} Days</div>
           </div>
         </div>
@@ -100,7 +94,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
             <Flame className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-tactical uppercase">{t.totalDaysLogged}</div>
+            <div className="text-[10px] text-slate-400 font-outfit font-bold uppercase tracking-wider">{t.totalDaysLogged}</div>
             <div className="text-xl font-bold text-white font-mono">{totalDaysPlayed} Days</div>
           </div>
         </div>
@@ -109,14 +103,14 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
       {/* 3. Masterwork Cleared Plaques Showcase */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 pb-1 border-b border-slate-800">
-          <Award className="w-4 h-4 text-copper-shine" />
-          <h3 className="font-cinzel text-base font-bold text-slate-200 uppercase tracking-wider">
+          <Award className="w-4 h-4 text-[#FFDE00]" />
+          <h3 className="font-outfit text-base font-black uppercase italic tracking-wider text-white">
             {t.memorialCleared}
           </h3>
         </div>
 
         {clearedGames.length === 0 ? (
-          <div className="p-8 text-center bg-slate-900/30 rounded-xl border border-dashed border-slate-800 text-xs text-slate-400">
+          <div className="p-8 text-center bg-slate-900/30 rounded-xl border border-dashed border-slate-800 text-xs text-slate-400 font-outfit">
             No games marked as Cleared yet. Add or change your game status to Cleared to display plaques here.
           </div>
         ) : (
@@ -138,15 +132,15 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ language = '
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 text-copper-light text-[10px] font-tactical tracking-widest uppercase">
+                    <div className="flex items-center gap-1 text-[#FFDE00] text-[10px] font-outfit font-bold tracking-widest uppercase">
                       <Shield className="w-3 h-3" />
                       <span>CLEARED</span>
                     </div>
-                    <h4 className="font-cinzel text-sm font-bold text-white group-hover:text-copper-shine truncate">
+                    <h4 className="font-outfit text-sm font-bold text-white group-hover:text-[#FFDE00] truncate">
                       {game.title}
                     </h4>
                     <div className="flex items-center justify-between text-xs text-slate-300 mt-1">
-                      <span className="text-copper-shine font-semibold">{game.platform}</span>
+                      <span className="text-[#FFDE00] font-semibold font-outfit">{game.platform}</span>
                       <span className="font-mono text-slate-400">{game.duration_days ? `${game.duration_days} Days` : ''}</span>
                     </div>
                   </div>

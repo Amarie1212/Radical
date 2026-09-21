@@ -123,33 +123,33 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
 
             {/* Right Title & Mastered Certificate */}
             <div className="flex-1 flex flex-col justify-center text-center sm:text-left space-y-1 w-full min-w-0">
-              <div className="flex items-center justify-center sm:justify-start gap-1.5 text-copper-light/80 text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] uppercase">
-                <Award className="w-3.5 h-3.5 text-copper-light shrink-0" />
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#FFDE00] text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase font-['Outfit']">
+                <Award className="w-3.5 h-3.5 text-[#FFDE00] shrink-0" />
                 <span>Certificate of Game Mastered:</span>
               </div>
 
-              <h1 className="font-cinzel text-xl sm:text-3xl md:text-4xl font-extrabold tracking-[0.08em] uppercase copper-text-gradient drop-shadow-md leading-none break-words">
+              <h1 className="font-['Outfit'] text-xl sm:text-3xl md:text-4xl font-black italic tracking-tight uppercase text-white drop-shadow-md leading-none break-words">
                 {game.title}
               </h1>
 
               <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="inline-flex items-center px-2.5 sm:px-3 py-0.5 rounded text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-emerald-950/80 text-emerald-400 border border-emerald-500/80 green-glow-badge">
+                <span className="inline-flex items-center px-2.5 sm:px-3 py-0.5 rounded text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-emerald-950/80 text-emerald-400 border border-emerald-500/80 green-glow-badge font-['Outfit']">
                   {game.status.toUpperCase()}
                 </span>
                 {game.platform && (
-                  <span className="text-[11px] sm:text-xs text-slate-400 font-tactical tracking-[0.18em] uppercase">
+                  <span className="text-[11px] sm:text-xs text-slate-300 font-['Outfit'] font-bold tracking-[0.14em] uppercase">
                     {game.platform}
                   </span>
                 )}
                 {game.rating && (
-                  <span className="text-[11px] sm:text-xs font-semibold text-amber-400 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-600/40">
+                  <span className="text-[11px] sm:text-xs font-bold text-amber-400 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-600/40 font-mono">
                     ★ {game.rating.toFixed(1)}
                   </span>
                 )}
               </div>
 
               {game.notes && (
-                <p className="text-[11px] sm:text-xs text-slate-300/80 italic line-clamp-2 pt-1">
+                <p className="text-[11px] sm:text-xs text-slate-300/80 italic line-clamp-2 pt-1 font-['Outfit']">
                   "{game.notes}"
                 </p>
               )}
@@ -158,39 +158,39 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
 
           {/* 2. Section: YOUR JOURNEY DATA */}
           <div className="mt-3 sm:mt-4">
-            <h3 className="font-tactical text-[11px] sm:text-xs font-bold uppercase tracking-widest text-copper-light mb-1.5 sm:mb-2 flex items-center gap-1.5">
+            <h3 className="font-['Outfit'] text-[11px] sm:text-xs font-black uppercase tracking-widest text-[#FFDE00] mb-1.5 sm:mb-2 flex items-center gap-1.5">
               <span>YOUR JOURNEY DATA</span>
             </h3>
 
             <div className="bg-[#0f2423]/90 border border-copper-dark/80 rounded-lg p-2.5 sm:p-3.5 md:p-4 space-y-2 shadow-inner">
               {/* Started On */}
               <div className="flex items-center justify-between py-1 border-b border-tealplate-border/40 text-xs sm:text-sm">
-                <div className="text-[10px] sm:text-xs text-slate-400 font-tactical tracking-wider uppercase">
+                <div className="text-[10px] sm:text-xs text-slate-400 font-['Outfit'] font-bold tracking-wider uppercase">
                   STARTED ON:
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 font-semibold text-slate-100 font-cinzel text-xs sm:text-base">
+                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-slate-100 font-mono text-xs sm:text-sm">
                   <span>{formatDate(game.started_on)}</span>
-                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-copper-light shrink-0" />
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFDE00] shrink-0" />
                 </div>
               </div>
 
               {/* Finished On */}
               <div className="flex items-center justify-between py-1 border-b border-tealplate-border/40 text-xs sm:text-sm">
-                <div className="text-[10px] sm:text-xs text-slate-400 font-tactical tracking-wider uppercase">
+                <div className="text-[10px] sm:text-xs text-slate-400 font-['Outfit'] font-bold tracking-wider uppercase">
                   FINISHED ON:
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 font-semibold text-slate-100 font-cinzel text-xs sm:text-base">
+                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-slate-100 font-mono text-xs sm:text-sm">
                   <span>{formatDate(game.finished_on)}</span>
-                  <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-copper-light shrink-0" />
+                  <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFDE00] shrink-0" />
                 </div>
               </div>
 
               {/* Total Duration */}
               <div className="flex items-center justify-between pt-1">
-                <div className="text-[10px] sm:text-xs text-slate-400 font-tactical tracking-wider uppercase">
+                <div className="text-[10px] sm:text-xs text-slate-400 font-['Outfit'] font-bold tracking-wider uppercase">
                   TOTAL DURATION:
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg font-bold text-copper-shine font-cinzel">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg font-black text-[#FFDE00] font-['Outfit'] italic">
                   <span>
                     {game.duration_days !== null && game.duration_days !== undefined
                       ? `${game.duration_days} Days`
@@ -198,7 +198,7 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
                       ? 'Calculated at Sync'
                       : 'Active Campaign'}
                   </span>
-                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-copper-shine shrink-0" />
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFDE00] shrink-0" />
                 </div>
               </div>
             </div>
@@ -207,10 +207,10 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
           {/* 3. Section: PROOF OF CLEARANCE */}
           <div className="mt-3 sm:mt-4">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <h3 className="font-tactical text-[11px] sm:text-xs font-bold uppercase tracking-widest text-copper-light">
+              <h3 className="font-['Outfit'] text-[11px] sm:text-xs font-black uppercase tracking-widest text-[#FFDE00]">
                 PROOF OF CLEARANCE
               </h3>
-              <span className="text-[9px] sm:text-[10px] text-slate-400 italic">Click to inspect</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 italic font-['Outfit']">Click to inspect</span>
             </div>
 
             <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
@@ -218,9 +218,9 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
                 <div
                   key={idx}
                   onClick={() => onViewProof && onViewProof(proof.url, proof.title)}
-                  className="group relative cursor-pointer bg-[#0d1e1c] border border-copper-dark/80 rounded-lg p-1 hover:border-copper-light transition-all shadow-md hover:shadow-[0_0_12px_rgba(200,125,74,0.4)]"
+                  className="group relative cursor-pointer bg-black/40 rounded-lg p-1 border border-tealplate-border/60 hover:border-copper-shine transition-all duration-200"
                 >
-                  <div className="relative aspect-video w-full rounded overflow-hidden bg-black/60">
+                  <div className="aspect-video w-full rounded overflow-hidden bg-slate-900 relative">
                     <img
                       src={proof.url}
                       alt={proof.label}
@@ -231,10 +231,10 @@ export const MemorialPlaque: React.FC<MemorialPlaqueProps> = ({
                       }}
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-copper-shine drop-shadow" />
+                      <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFDE00] drop-shadow" />
                     </div>
                   </div>
-                  <div className="text-[8px] sm:text-[10px] text-center text-slate-400 group-hover:text-copper-shine font-tactical tracking-wider py-0.5 sm:py-1 truncate">
+                  <div className="text-[8px] sm:text-[10px] text-center text-slate-300 group-hover:text-[#FFDE00] font-['Outfit'] font-semibold tracking-wider py-0.5 sm:py-1 truncate">
                     {proof.label}
                   </div>
                 </div>
