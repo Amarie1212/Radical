@@ -226,7 +226,7 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                       src={item.cover_image_url}
                       alt=""
                       className="quest-thumb-img"
-                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}

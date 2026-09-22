@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { AppLanguage, AppThemeMode, Game, Profile } from './types';
-import { DEFAULT_GAMES } from '../assets/default_games';
 
 const STORAGE_KEY_URL = 'achievement_supabase_url';
 const STORAGE_KEY_ANON = 'achievement_supabase_anon_key';
@@ -273,47 +272,126 @@ export async function updateUserPassword(newPassword: string) {
 // GAME CRUD OPERATIONS (ONLINE WITH OFFLINE DEMO FALLBACK)
 // ----------------------------------------------------------------------
 
-export function getLocalCachedGames(): Game[] {
-  const cached = localStorage.getItem(STORAGE_KEY_GAMES);
+try {
+  // Purge legacy shared offline games cache so previous users' games never leak
+  localStorage.removeItem(STORAGE_KEY_GAMES);
+} catch {
+  // ignore
+}
+
+// ----------------------------------------------------------------------
+// INDEXEDDB FULL-PHOTO LOCAL CACHE (Bypasses 5MB LocalStorage limit)
+// ----------------------------------------------------------------------
+const IDB_NAME = 'radical_dreamer_archive';
+const IDB_STORE = 'user_game_vault';
+
+function openIndexedDb(): Promise<IDBDatabase | null> {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open(IDB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+export async function getIdbCachedGames(userId?: string): Promise<Game[]> {
+  if (!userId) return [];
+  const db = await openIndexedDb();
+  if (!db) return [];
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.get(userId);
+      req.onsuccess = () => {
+        resolve(Array.isArray(req.result) ? req.result : []);
+      };
+      req.onerror = () => resolve([]);
+    } catch {
+      resolve([]);
+    }
+  });
+}
+
+export async function setIdbCachedGames(userId: string, games: Game[]): Promise<void> {
+  if (!userId || !Array.isArray(games)) return;
+  const db = await openIndexedDb();
+  if (!db) return;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.put(games, userId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+    } catch {
+      resolve();
+    }
+  });
+}
+
+function getUserStorageKey(userId?: string): string | null {
+  return userId ? `${STORAGE_KEY_GAMES}_${userId}` : null;
+}
+
+export function getLocalCachedGames(userId?: string): Game[] {
+  if (!userId) return [];
+  const key = getUserStorageKey(userId);
+  if (!key) return [];
+  const cached = localStorage.getItem(key);
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     } catch {
       // ignore
     }
   }
-  return DEFAULT_GAMES;
+  return [];
 }
 
-export function saveLocalCachedGames(games: Game[]) {
-  if (!Array.isArray(games) || games.length === 0) return;
+export function saveLocalCachedGames(games: Game[], userId?: string) {
+  if (!Array.isArray(games) || !userId) return;
+
+  // 1. Always store full games (including all base64 cover images and proofs) into IndexedDB
+  setIdbCachedGames(userId, games).catch(() => {});
+
+  // 2. Also save to LocalStorage (with graceful fallback if quota is exceeded)
+  const key = getUserStorageKey(userId);
+  if (!key) return;
   try {
-    localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(games));
-  } catch (quotaErr) {
-    console.warn('LocalStorage quota exceeded (e.g. large base64 images). Storing slim cache without large base64 data to avoid crash.', quotaErr);
+    localStorage.setItem(key, JSON.stringify(games));
+  } catch (_quotaErr) {
     try {
+      // If quota exceeded, strip only proofs but try to keep cover images
       const slimGames = games.map((game) => {
         const copy = { ...game };
-        if (copy.cover_image_url && copy.cover_image_url.startsWith('data:') && copy.cover_image_url.length > 1024) {
-          copy.cover_image_url = '';
-        }
-        if (copy.proof_clear && copy.proof_clear.startsWith('data:') && copy.proof_clear.length > 1024) {
+        if (copy.proof_clear && copy.proof_clear.startsWith('data:') && copy.proof_clear.length > 512) {
           copy.proof_clear = '';
         }
-        if (copy.proof_credits && copy.proof_credits.startsWith('data:') && copy.proof_credits.length > 1024) {
+        if (copy.proof_credits && copy.proof_credits.startsWith('data:') && copy.proof_credits.length > 512) {
           copy.proof_credits = '';
         }
-        if (copy.proof_achievement && copy.proof_achievement.startsWith('data:') && copy.proof_achievement.length > 1024) {
+        if (copy.proof_achievement && copy.proof_achievement.startsWith('data:') && copy.proof_achievement.length > 512) {
           copy.proof_achievement = '';
         }
         return copy;
       });
-      localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(slimGames));
-    } catch (secondErr) {
-      console.warn('Unable to write to localStorage at all:', secondErr);
+      localStorage.setItem(key, JSON.stringify(slimGames));
+    } catch (_secondErr) {
+      // LocalStorage full; IndexedDB retains complete full data safely
     }
   }
 }
@@ -328,10 +406,16 @@ function sanitizeGameForStorage<T extends Partial<Game>>(game: T): T {
   return cloned as T;
 }
 
-export async function fetchGames(_userId?: string): Promise<Game[]> {
+export async function fetchGames(userId?: string): Promise<Game[]> {
+  if (!userId) {
+    return [];
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
-    return getLocalCachedGames();
+    const idbGames = await getIdbCachedGames(userId);
+    if (idbGames.length > 0) return idbGames;
+    return getLocalCachedGames(userId);
   }
 
   let result: { data: unknown[] | null; error: { message?: string } | null };
@@ -339,35 +423,41 @@ export async function fetchGames(_userId?: string): Promise<Game[]> {
     result = await supabase
       .from('games')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
   } catch (error) {
     console.warn('Supabase unavailable, using local games:', error);
-    return getLocalCachedGames();
+    const idbGames = await getIdbCachedGames(userId);
+    if (idbGames.length > 0) return idbGames;
+    return getLocalCachedGames(userId);
   }
 
   const { data, error } = result;
 
   if (error) {
     console.error('Failed to fetch games from Supabase:', error);
-    return getLocalCachedGames();
+    const idbGames = await getIdbCachedGames(userId);
+    if (idbGames.length > 0) return idbGames;
+    return getLocalCachedGames(userId);
   }
 
   // If user already has games in database, cache safely and return them
   if (data && data.length > 0) {
-    console.log(`[Supabase Cloud] Successfully fetched ${data.length} games from database.`);
+    console.log(`[Supabase Cloud] Successfully fetched ${data.length} games for user ${userId || 'all'}.`);
     const gamesList = (data as Game[]).map((game) => {
       const { proofs: _proofs, ...rest } = game;
       return rest as Game;
     });
     try {
-      saveLocalCachedGames(gamesList);
+      saveLocalCachedGames(gamesList, userId);
     } catch (cacheErr) {
       console.warn('Could not cache games locally, continuing with fetched games:', cacheErr);
     }
     return gamesList;
   }
 
-  // If database is empty, return empty list
+  // If user has 0 games in database, clear user cache and return empty list
+  saveLocalCachedGames([], userId);
   return [];
 }
 
@@ -406,9 +496,9 @@ export async function addGame(game: Omit<Game, 'id' | 'duration_days'>, userId?:
     duration_days,
     created_at: new Date().toISOString(),
   };
-  const current = getLocalCachedGames();
+  const current = getLocalCachedGames(userId);
   const updated = [newGame, ...current];
-  saveLocalCachedGames(updated);
+  saveLocalCachedGames(updated, userId);
   return newGame;
 }
 
@@ -423,6 +513,7 @@ export async function updateGame(id: string, updates: Partial<Game>, userId?: st
         .from('games')
         .update(cleanUpdates)
         .eq('id', id)
+        .eq('user_id', userId)
         .select('*')
         .single();
 
@@ -433,7 +524,7 @@ export async function updateGame(id: string, updates: Partial<Game>, userId?: st
     }
   }
 
-  const current = getLocalCachedGames();
+  const current = getLocalCachedGames(userId);
   let updatedGame: Game | null = null;
   const updatedList = current.map(g => {
     if (g.id === id) {
@@ -448,7 +539,7 @@ export async function updateGame(id: string, updates: Partial<Game>, userId?: st
     }
     return g;
   });
-  saveLocalCachedGames(updatedList);
+  saveLocalCachedGames(updatedList, userId);
   if (!updatedGame) throw new Error('Game not found');
   return updatedGame;
 }
@@ -460,16 +551,18 @@ export async function deleteGame(id: string, userId?: string): Promise<void> {
       const { error } = await supabase
         .from('games')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
       if (error) console.warn('Supabase delete error:', error);
     } catch (err) {
       console.warn('Supabase delete exception:', err);
     }
   }
-  const current = getLocalCachedGames();
+  const current = getLocalCachedGames(userId);
   const filtered = current.filter(g => g.id !== id);
-  saveLocalCachedGames(filtered);
+  saveLocalCachedGames(filtered, userId);
 }
+
 
 export async function markAsCleared(id: string, finishedDateOrUserId?: string, maybeUserId?: string): Promise<Game> {
   let finishedDateStr: string;

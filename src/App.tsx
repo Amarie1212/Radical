@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AppLanguage, AppThemeMode, Game, TabType } from './lib/types';
 import {
   getSupabaseConfig,
@@ -6,6 +6,7 @@ import {
   getSupabase,
   fetchGames,
   getLocalCachedGames,
+  getIdbCachedGames,
   addGame,
   updateGame,
   deleteGame,
@@ -26,7 +27,7 @@ import { AchievementsView } from './components/AchievementsView';
 import { ProofLightbox } from './components/ProofLightbox';
 import { MemorialPlaque } from './components/MemorialPlaque';
 import { JournalDashboard } from './components/JournalDashboard';
-import { CheckCircle2, UserRound } from 'lucide-react';
+import { CheckCircle2, UserRound, Loader2 } from 'lucide-react';
 
 import { User } from '@supabase/supabase-js';
 
@@ -34,10 +35,12 @@ export const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isUserSwitching, setIsUserSwitching] = useState(false);
+  const activeUserIdRef = useRef<string | null>(null);
   const [config, setConfig] = useState(getSupabaseConfig());
 
-  // Data State - initialize with cached/default games immediately so screen is never empty
-  const [games, setGames] = useState<Game[]>(() => getLocalCachedGames());
+  // Data State - initialize per authenticated user
+  const [games, setGames] = useState<Game[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [isPlaqueOpen, setIsPlaqueOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('TIMELINE');
@@ -85,12 +88,27 @@ export const App: React.FC = () => {
               console.warn('Supabase getSession warning:', error);
             }
             if (isMounted) {
-              setUser(session?.user || null);
+              const u = session?.user || null;
+              activeUserIdRef.current = u?.id || null;
+              setUser(u);
             }
 
             const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-              if (isMounted) {
-                setUser(newSession?.user || null);
+              if (!isMounted) return;
+              const nextUser = newSession?.user || null;
+              const nextUserId = nextUser?.id || null;
+
+              if (activeUserIdRef.current !== nextUserId) {
+                // User switched or logged out! Instantly clear games and prevent ghost items
+                activeUserIdRef.current = nextUserId;
+                setGames([]);
+                setSelectedGameId(null);
+                if (nextUserId) {
+                  setIsUserSwitching(true);
+                }
+                setUser(nextUser);
+              } else {
+                setUser(nextUser);
               }
             });
 
@@ -117,26 +135,51 @@ export const App: React.FC = () => {
 
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Reload Games Function
-  const loadGames = useCallback(async (showToast = false) => {
+  // Reload Games Function with strict user verification
+  const loadGames = useCallback(async (targetUserIdOrShowToast?: string | boolean, maybeShowToast = false) => {
+    let currentId: string | undefined;
+    let showToast = false;
+
+    if (typeof targetUserIdOrShowToast === 'boolean') {
+      showToast = targetUserIdOrShowToast;
+      currentId = user?.id;
+    } else if (typeof targetUserIdOrShowToast === 'string') {
+      currentId = targetUserIdOrShowToast;
+      showToast = maybeShowToast;
+    } else {
+      currentId = user?.id;
+      showToast = maybeShowToast;
+    }
+
+    if (!currentId) {
+      setGames([]);
+      setSelectedGameId(null);
+      setIsUserSwitching(false);
+      return;
+    }
+
     try {
       setIsSyncing(true);
-      const data = await fetchGames(user?.id);
-      if (Array.isArray(data) && data.length > 0) {
-        setGames(data);
-        if (showToast) {
-          notify(`Synchronized ${data.length} games from database.`);
-        }
+      const data = await fetchGames(currentId);
+
+      // Verify that user hasn't switched or logged out while request was in-flight
+      if (activeUserIdRef.current !== currentId) {
+        return;
       }
 
-      setSelectedGameId((currentId) => {
-        if (!currentId && data.length > 0) {
+      setGames(data);
+      if (showToast) {
+        notify(`Synchronized ${data.length} games from database.`);
+      }
+
+      setSelectedGameId((currentSelected) => {
+        if (!data || data.length === 0) {
+          return null;
+        }
+        if (!currentSelected || !data.some((g) => g.id === currentSelected)) {
           return data[0].id;
         }
-        if (currentId && data.length > 0 && !data.some((g) => g.id === currentId)) {
-          return data[0].id;
-        }
-        return currentId;
+        return currentSelected;
       });
     } catch (err) {
       console.error('Error loading games:', err);
@@ -145,6 +188,7 @@ export const App: React.FC = () => {
       }
     } finally {
       setIsSyncing(false);
+      setIsUserSwitching(false);
     }
   }, [user?.id, notify]);
 
@@ -176,8 +220,33 @@ export const App: React.FC = () => {
 
   // Load games on initial mount and whenever user auth state resolves
   useEffect(() => {
-    loadGames();
-  }, [user, loadGames]);
+    if (!user?.id) {
+      setGames([]);
+      setSelectedGameId(null);
+      setIsUserSwitching(false);
+      return;
+    }
+
+    const targetUserId = user.id;
+
+    // 1. Immediately load synchronous local cache so screen has instant skeleton/entries
+    const cached = getLocalCachedGames(targetUserId);
+    if (cached.length > 0) {
+      setGames(cached);
+      setSelectedGameId((curr) => curr || cached[0].id);
+    }
+
+    // 2. Load IndexedDB cache which retains 100% of all cover images and photos intact
+    getIdbCachedGames(targetUserId).then((idbGames) => {
+      if (idbGames.length > 0 && activeUserIdRef.current === targetUserId) {
+        setGames(idbGames);
+        setSelectedGameId((curr) => curr || idbGames[0].id);
+      }
+    });
+
+    // 3. Fetch fresh from server for this specific user
+    loadGames(targetUserId);
+  }, [user?.id, loadGames]);
 
   // Real-time live sync subscription
   useEffect(() => {
@@ -272,8 +341,12 @@ export const App: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    activeUserIdRef.current = null;
+    setIsUserSwitching(false);
+    setGames([]);
+    setSelectedGameId(null);
     setUser(null);
+    await signOut();
     notify('Signed out successfully.');
   };
 
@@ -316,12 +389,30 @@ export const App: React.FC = () => {
       <AuthGate
         language={languageMode}
         onAuthenticated={(method) => {
+          setGames([]);
+          setSelectedGameId(null);
+          setIsUserSwitching(true);
           getCurrentUser().then((currentUser) => {
+            activeUserIdRef.current = currentUser?.id || null;
             setUser(currentUser);
             notify(method === 'register' ? 'Registration successful.' : 'Login successful.');
           });
         }}
       />
+    );
+  }
+
+  // Loading transition when switching users so previous items NEVER linger
+  if (authChecked && user && isUserSwitching && games.length === 0) {
+    return (
+      <div className="min-h-dvh bg-[#0A0B0E] flex flex-col items-center justify-center p-4 select-none">
+        <div className="w-12 h-12 rounded-2xl bg-[#181922] border-[1.5px] border-[#2E3244] flex items-center justify-center text-[#FFDE00] animate-spin">
+          <Loader2 className="w-6 h-6" />
+        </div>
+        <p className="mt-4 font-mono text-[11px] font-bold uppercase tracking-widest text-[#8E92A4]">
+          {languageMode === 'en' ? 'SYNCHRONIZING USER ARCHIVE...' : 'MEMUAT DATA PENGGUNA...'}
+        </p>
+      </div>
     );
   }
 
