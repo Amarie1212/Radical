@@ -738,6 +738,8 @@ a:active,
   display: flex;
   align-items: center;
   width: 100%;
+  flex-shrink: 0;
+  min-height: 72px;
   box-sizing: border-box;
   gap: 12px;
   padding: 8px 12px;
@@ -747,8 +749,6 @@ a:active,
   color: #FFFFFF;
   border-radius: 14px;
   cursor: pointer;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 72px;
   transition: background-color 140ms ease, border-color 140ms ease, transform 140ms cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 140ms ease;
   overflow: hidden;
 }
@@ -1429,76 +1429,109 @@ a:active,
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Tactical Duration Meter Card */
+/* Tactical Duration Telemetry Card */
 .duration-card {
-  border: 1.5px solid #333648;
-  background: #171824;
-  padding: 10px 16px;
-  border-radius: 10px;
+  border: 1.5px solid #2B2E40;
+  background: linear-gradient(135deg, #181926 0%, #12131D 100%);
+  padding: 12px 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-width: 150px;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.4);
+  min-width: 175px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45);
   position: relative;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.duration-card:hover {
+  border-color: #3E435E;
 }
 
 .duration-card-head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.duration-head-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .duration-card-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #8E92A4;
+}
+
+.duration-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.duration-badge.badge-cleared {
+  background: rgba(255, 222, 0, 0.12);
+  color: #FFDE00;
+  border: 1px solid rgba(255, 222, 0, 0.35);
+}
+
+.duration-badge.badge-active {
+  background: rgba(255, 122, 0, 0.12);
+  color: #FF7A00;
+  border: 1px solid rgba(255, 122, 0, 0.35);
 }
 
 .duration-card-body {
   display: flex;
   align-items: baseline;
-  gap: 5px;
-  margin: 4px 0 6px;
+  gap: 6px;
+  margin: 6px 0 4px;
 }
 
 .duration-card-val {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(28px, 2.6vw, 38px);
+  font-size: clamp(26px, 2.3vw, 34px);
   font-weight: 900;
   font-style: italic;
   line-height: 1;
-  color: #FFDE00;
+  color: #FFFFFF;
   letter-spacing: -0.02em;
 }
 
 .duration-card-unit {
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   font-style: italic;
-  letter-spacing: 0.06em;
-  color: #FFFFFF;
+  letter-spacing: 0.05em;
+  color: #FFDE00;
 }
 
-.duration-card-ticker {
+.duration-card-footer {
   display: flex;
-  gap: 3px;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #71758A;
 }
 
-.ticker-seg {
-  flex: 1;
-  height: 3px;
-  border-radius: 2px;
-  background: #252838;
-}
-
-.ticker-seg.active {
-  background: #FFDE00;
-  box-shadow: 0 0 4px rgba(255, 222, 0, 0.4);
+.dot-active {
+  background: #FF7A00;
+  box-shadow: 0 0 6px rgba(255, 122, 0, 0.6);
 }
 
 /* Proofs / Surveillance Snapshot Section */
@@ -2601,6 +2634,8 @@ html[data-theme='dark'] .zzz-modal-window {
   }
 
   .quest-entry {
+    flex-shrink: 0;
+    min-height: 66px;
     padding: 8px 10px;
     gap: 10px;
     border-radius: 12px;

@@ -17,16 +17,19 @@ export function sanitizeSupabaseUrl(rawUrl: string): string {
   return url;
 }
 
+const FALLBACK_SUPABASE_URL = 'https://hbtqgsnstqrymscqvpeb.supabase.co';
+const FALLBACK_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhidHFnc25zdHFyeW1zY3F2cGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4ODk1NzksImV4cCI6MjEwNDQ2NTU3OX0.QtC09tGXZU-tskNS9hpYtPk92bfM9g13xO23H8xM-sE';
+
 // Helper to get active configuration
 export function getSupabaseConfig(): { url: string; anonKey: string; isConfigured: boolean } {
-  const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const envAnon = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const envUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+  const envAnon = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
   
-  const localUrl = localStorage.getItem(STORAGE_KEY_URL) || '';
-  const localAnon = localStorage.getItem(STORAGE_KEY_ANON) || '';
+  const localUrl = (localStorage.getItem(STORAGE_KEY_URL) || '').trim();
+  const localAnon = (localStorage.getItem(STORAGE_KEY_ANON) || '').trim();
 
-  const rawUrl = localUrl || envUrl;
-  const rawAnon = localAnon || envAnon;
+  const rawUrl = envUrl || localUrl || FALLBACK_SUPABASE_URL;
+  const rawAnon = envAnon || localAnon || FALLBACK_SUPABASE_ANON;
 
   const url = sanitizeSupabaseUrl(rawUrl);
   const anonKey = rawAnon.trim();
@@ -274,7 +277,10 @@ export function getLocalCachedGames(): Game[] {
   const cached = localStorage.getItem(STORAGE_KEY_GAMES);
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
     } catch {
       // ignore
     }
@@ -283,25 +289,48 @@ export function getLocalCachedGames(): Game[] {
 }
 
 export function saveLocalCachedGames(games: Game[]) {
-  localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(games));
-}
-
-function isNetworkFailure(error: unknown) {
-  if (error instanceof TypeError) return true;
-  const message = error instanceof Error ? error.message.toLowerCase() : '';
-  return message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error');
+  if (!Array.isArray(games) || games.length === 0) return;
+  try {
+    localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(games));
+  } catch (quotaErr) {
+    console.warn('LocalStorage quota exceeded (e.g. large base64 images). Storing slim cache without large base64 data to avoid crash.', quotaErr);
+    try {
+      const slimGames = games.map((game) => {
+        const copy = { ...game };
+        if (copy.cover_image_url && copy.cover_image_url.startsWith('data:') && copy.cover_image_url.length > 1024) {
+          copy.cover_image_url = '';
+        }
+        if (copy.proof_clear && copy.proof_clear.startsWith('data:') && copy.proof_clear.length > 1024) {
+          copy.proof_clear = '';
+        }
+        if (copy.proof_credits && copy.proof_credits.startsWith('data:') && copy.proof_credits.length > 1024) {
+          copy.proof_credits = '';
+        }
+        if (copy.proof_achievement && copy.proof_achievement.startsWith('data:') && copy.proof_achievement.length > 1024) {
+          copy.proof_achievement = '';
+        }
+        return copy;
+      });
+      localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(slimGames));
+    } catch (secondErr) {
+      console.warn('Unable to write to localStorage at all:', secondErr);
+    }
+  }
 }
 
 function sanitizeGameForStorage<T extends Partial<Game>>(game: T): T {
   const cloned = { ...game } as Record<string, unknown>;
   delete cloned.proofs;
   delete cloned.duration_days;
+  if (typeof cloned.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cloned.id)) {
+    delete cloned.id;
+  }
   return cloned as T;
 }
 
-export async function fetchGames(userId?: string): Promise<Game[]> {
+export async function fetchGames(_userId?: string): Promise<Game[]> {
   const supabase = getSupabase();
-  if (!supabase || !userId) {
+  if (!supabase) {
     return getLocalCachedGames();
   }
 
@@ -310,7 +339,6 @@ export async function fetchGames(userId?: string): Promise<Game[]> {
     result = await supabase
       .from('games')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false });
   } catch (error) {
     console.warn('Supabase unavailable, using local games:', error);
@@ -324,32 +352,23 @@ export async function fetchGames(userId?: string): Promise<Game[]> {
     return getLocalCachedGames();
   }
 
-  if (data && data.length === 0) {
-    // Populate initial games for new cloud user
+  // If user already has games in database, cache safely and return them
+  if (data && data.length > 0) {
+    console.log(`[Supabase Cloud] Successfully fetched ${data.length} games from database.`);
+    const gamesList = (data as Game[]).map((game) => {
+      const { proofs: _proofs, ...rest } = game;
+      return rest as Game;
+    });
     try {
-      const initialGames = DEFAULT_GAMES.map(g => ({
-        ...g,
-        id: undefined, // let DB generate UUID
-        user_id: userId,
-      }));
-      const { data: inserted } = await supabase
-        .from('games')
-        .insert(initialGames)
-        .select('*');
-      if (inserted && inserted.length > 0) {
-        return inserted as Game[];
-      }
-    } catch (seedErr) {
-      console.warn('Could not seed initial games:', seedErr);
+      saveLocalCachedGames(gamesList);
+    } catch (cacheErr) {
+      console.warn('Could not cache games locally, continuing with fetched games:', cacheErr);
     }
+    return gamesList;
   }
 
-  const gamesList = ((data as Game[]) || []).map((game) => {
-    const { proofs: _proofs, ...rest } = game;
-    return rest as Game;
-  });
-  saveLocalCachedGames(gamesList);
-  return gamesList;
+  // If database is empty, return empty list
+  return [];
 }
 
 export async function addGame(game: Omit<Game, 'id' | 'duration_days'>, userId?: string): Promise<Game> {
@@ -377,11 +396,8 @@ export async function addGame(game: Omit<Game, 'id' | 'duration_days'>, userId?:
       if (error) throw error;
       return data as Game;
     } catch (error) {
-      if (!isNetworkFailure(error)) throw error;
-      console.warn('Supabase unavailable, saving game locally:', error);
+      console.warn('Supabase unavailable or error, saving game locally:', error);
     }
-  } else {
-    // Use the local path below when cloud mode is not configured.
   }
 
   const newGame: Game = {
@@ -402,57 +418,77 @@ export async function updateGame(id: string, updates: Partial<Game>, userId?: st
   if (supabase && userId) {
     const cleanUpdates = sanitizeGameForStorage(updates);
 
-    const { data, error } = await supabase
-      .from('games')
-      .update(cleanUpdates)
-      .eq('id', id)
-      .select('*')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .update(cleanUpdates)
+        .eq('id', id)
+        .select('*')
+        .single();
 
-    if (error) throw error;
-    return data as Game;
-  } else {
-    const current = getLocalCachedGames();
-    let updatedGame: Game | null = null;
-    const updatedList = current.map(g => {
-      if (g.id === id) {
-        const merged = { ...g, ...updates };
-        if (merged.started_on && merged.finished_on) {
-          const start = new Date(merged.started_on).getTime();
-          const finish = new Date(merged.finished_on).getTime();
-          merged.duration_days = Math.max(0, Math.round((finish - start) / (1000 * 60 * 60 * 24)));
-        }
-        updatedGame = merged;
-        return merged;
-      }
-      return g;
-    });
-    saveLocalCachedGames(updatedList);
-    if (!updatedGame) throw new Error('Game not found');
-    return updatedGame;
+      if (error) throw error;
+      return data as Game;
+    } catch (error) {
+      console.warn('Supabase update failed, updating locally:', error);
+    }
   }
+
+  const current = getLocalCachedGames();
+  let updatedGame: Game | null = null;
+  const updatedList = current.map(g => {
+    if (g.id === id) {
+      const merged = { ...g, ...updates };
+      if (merged.started_on && merged.finished_on) {
+        const start = new Date(merged.started_on).getTime();
+        const finish = new Date(merged.finished_on).getTime();
+        merged.duration_days = Math.max(0, Math.round((finish - start) / (1000 * 60 * 60 * 24)));
+      }
+      updatedGame = merged;
+      return merged;
+    }
+    return g;
+  });
+  saveLocalCachedGames(updatedList);
+  if (!updatedGame) throw new Error('Game not found');
+  return updatedGame;
 }
 
 export async function deleteGame(id: string, userId?: string): Promise<void> {
   const supabase = getSupabase();
   if (supabase && userId) {
-    const { error } = await supabase
-      .from('games')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
-  } else {
-    const current = getLocalCachedGames();
-    const filtered = current.filter(g => g.id !== id);
-    saveLocalCachedGames(filtered);
+    try {
+      const { error } = await supabase
+        .from('games')
+        .delete()
+        .eq('id', id);
+      if (error) console.warn('Supabase delete error:', error);
+    } catch (err) {
+      console.warn('Supabase delete exception:', err);
+    }
   }
+  const current = getLocalCachedGames();
+  const filtered = current.filter(g => g.id !== id);
+  saveLocalCachedGames(filtered);
 }
 
-export async function markAsCleared(id: string, finishedDateStr?: string, userId?: string): Promise<Game> {
-  const today = finishedDateStr || new Date().toISOString().split('T')[0];
+export async function markAsCleared(id: string, finishedDateOrUserId?: string, maybeUserId?: string): Promise<Game> {
+  let finishedDateStr: string;
+  let userId: string | undefined;
+
+  if (maybeUserId) {
+    finishedDateStr = finishedDateOrUserId || new Date().toISOString().split('T')[0];
+    userId = maybeUserId;
+  } else if (finishedDateOrUserId && finishedDateOrUserId.includes('-') && finishedDateOrUserId.length <= 10) {
+    finishedDateStr = finishedDateOrUserId;
+    userId = undefined;
+  } else {
+    finishedDateStr = new Date().toISOString().split('T')[0];
+    userId = finishedDateOrUserId;
+  }
+
   return updateGame(id, {
     status: 'Cleared',
-    finished_on: today,
+    finished_on: finishedDateStr,
   }, userId);
 }
 

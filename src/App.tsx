@@ -5,6 +5,7 @@ import {
   getCurrentUser,
   getSupabase,
   fetchGames,
+  getLocalCachedGames,
   addGame,
   updateGame,
   deleteGame,
@@ -35,11 +36,10 @@ export const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [config, setConfig] = useState(getSupabaseConfig());
 
-  // Data State
-  const [games, setGames] = useState<Game[]>([]);
+  // Data State - initialize with cached/default games immediately so screen is never empty
+  const [games, setGames] = useState<Game[]>(() => getLocalCachedGames());
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [isPlaqueOpen, setIsPlaqueOpen] = useState(false);
-  const [hasInitializedSelection, setHasInitializedSelection] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('TIMELINE');
   const [themeMode, setThemeMode] = useState<AppThemeMode>('dark');
   const [languageMode, setLanguageMode] = useState<AppLanguage>('en');
@@ -71,46 +71,82 @@ export const App: React.FC = () => {
 
   // Check initial Auth
   useEffect(() => {
+    let isMounted = true;
     const initAuth = async () => {
-      const cfg = getSupabaseConfig();
-      setConfig(cfg);
+      try {
+        const cfg = getSupabaseConfig();
+        if (isMounted) setConfig(cfg);
 
-      if (cfg.isConfigured) {
-        const supabase = getSupabase();
-        if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
-          setUser(session?.user || null);
+        if (cfg.isConfigured) {
+          const supabase = getSupabase();
+          if (supabase) {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) {
+              console.warn('Supabase getSession warning:', error);
+            }
+            if (isMounted) {
+              setUser(session?.user || null);
+            }
 
-          const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user || null);
-          });
+            const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+              if (isMounted) {
+                setUser(newSession?.user || null);
+              }
+            });
 
+            if (isMounted) setAuthChecked(true);
+            return () => {
+              authListener.subscription.unsubscribe();
+            };
+          }
+        }
+      } catch (err) {
+        console.error('Error during initAuth:', err);
+      } finally {
+        if (isMounted) {
           setAuthChecked(true);
-          return () => {
-            authListener.subscription.unsubscribe();
-          };
         }
       }
-      setAuthChecked(true);
     };
 
     initAuth();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Reload Games Function
-  const loadGames = useCallback(async () => {
-    try {
-      const data = await fetchGames(user?.id);
-      setGames(data);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-      if (data.length > 0 && !selectedGameId && !hasInitializedSelection) {
-        setSelectedGameId(data[0].id);
-        setHasInitializedSelection(true);
+  // Reload Games Function
+  const loadGames = useCallback(async (showToast = false) => {
+    try {
+      setIsSyncing(true);
+      const data = await fetchGames(user?.id);
+      if (Array.isArray(data) && data.length > 0) {
+        setGames(data);
+        if (showToast) {
+          notify(`Synchronized ${data.length} games from database.`);
+        }
       }
+
+      setSelectedGameId((currentId) => {
+        if (!currentId && data.length > 0) {
+          return data[0].id;
+        }
+        if (currentId && data.length > 0 && !data.some((g) => g.id === currentId)) {
+          return data[0].id;
+        }
+        return currentId;
+      });
     } catch (err) {
       console.error('Error loading games:', err);
+      if (showToast) {
+        notify('Failed to sync games with database.');
+      }
+    } finally {
+      setIsSyncing(false);
     }
-  }, [user?.id, selectedGameId, hasInitializedSelection]);
+  }, [user?.id, notify]);
 
   useEffect(() => {
     const preferences = getStoredUserPreferences();
@@ -138,12 +174,10 @@ export const App: React.FC = () => {
     }
   }, [user?.id, themeMode, languageMode]);
 
-  // Load games on auth change
+  // Load games on initial mount and whenever user auth state resolves
   useEffect(() => {
-    if (user || !config.isConfigured) {
-      loadGames();
-    }
-  }, [user, config.isConfigured, loadGames]);
+    loadGames();
+  }, [user, loadGames]);
 
   // Real-time live sync subscription
   useEffect(() => {
@@ -194,8 +228,8 @@ export const App: React.FC = () => {
   }, [games, searchQuery, selectedStatus, selectedPlatform]);
 
   const selectedGame = useMemo(() => {
-    if (!selectedGameId) return null;
-    return games.find((g) => g.id === selectedGameId) || null;
+    if (!selectedGameId) return games[0] || null;
+    return games.find((g) => g.id === selectedGameId) || games[0] || null;
   }, [games, selectedGameId]);
 
   const clearedGamesCount = useMemo(() => games.filter((g) => g.status === 'Cleared').length, [games]);
@@ -231,7 +265,7 @@ export const App: React.FC = () => {
   };
 
   const handleMarkCleared = async (id: string) => {
-    await markAsCleared(id, user?.id);
+    await markAsCleared(id, undefined, user?.id);
     setGames((currentGames) => currentGames.map((game) => (
       game.id === id ? { ...game, status: 'Cleared' } : game
     )));
@@ -339,12 +373,14 @@ export const App: React.FC = () => {
             <div className="paper-dashboard w-full h-full min-h-0 flex-1 flex flex-col">
               <JournalDashboard
                 language={languageMode}
-                games={filteredGames}
+                games={games}
                 selectedGame={selectedGame}
                 onSelectGame={handleSelectGame}
                 onEditGame={handleOpenEdit}
                 onDeleteGame={handleDeleteGame}
                 onOpenProof={(url, title) => setLightboxProof({ isOpen: true, url, title })}
+                onRefresh={() => loadGames(true)}
+                isSyncing={isSyncing}
               />
             </div>
           )}

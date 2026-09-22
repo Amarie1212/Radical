@@ -442,7 +442,6 @@ export const GameModal: React.FC<GameModalProps> = ({
             <div className="space-y-2.5">
               <span className="zzz-modal-subtitle block">ARCHIVE VERIFICATION</span>
               <div className="zzz-item-card">
-                <div className="zzz-item-icon">📋</div>
                 <div className="zzz-item-copy">
                   <strong className="break-words">{title || 'Untitled Game'}</strong>
                   <small>

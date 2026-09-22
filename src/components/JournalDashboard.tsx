@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap, Film, Calendar, Flag, Clock, ArrowLeft, ArrowRight, FileText, Quote } from 'lucide-react';
+import { Edit2, MoreHorizontal, Search, Trash2, Gamepad2, Tag, Trophy, Zap, Film, Calendar, Flag, Clock, ArrowLeft, ArrowRight, FileText, Quote, RefreshCw } from 'lucide-react';
 import { AppLanguage, Game } from '../lib/types';
 import { getText } from '../lib/i18n';
 
@@ -11,6 +11,8 @@ interface JournalDashboardProps {
   onEditGame: (game: Game) => void;
   onDeleteGame: (id: string) => void;
   onOpenProof?: (url: string, title: string) => void;
+  onRefresh?: () => void;
+  isSyncing?: boolean;
 }
 
 const formatDate = (value: string | null, fallback: string) => {
@@ -31,6 +33,8 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
   onEditGame,
   onDeleteGame,
   onOpenProof,
+  onRefresh,
+  isSyncing,
 }) => {
   const t = {
     searchGame: getText(language, 'searchGame'),
@@ -98,18 +102,23 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
       setIsDeleteClosing(false);
     }, 200);
   };
-  const clearedCount = useMemo(() => games.filter((item) => item.status === 'Cleared').length, [games]);
+  const safeGames = Array.isArray(games) ? games : [];
+  const clearedCount = useMemo(() => safeGames.filter((item) => item?.status === 'Cleared').length, [safeGames]);
 
-  const visibleGames = games
-    .filter((item) => {
-      const matchesSearch = item.title.toLowerCase().includes(gameSearch.trim().toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const visibleGames = useMemo(() => {
+    return safeGames
+      .filter((item) => {
+        if (!item) return false;
+        const title = item.title ? item.title.toLowerCase() : '';
+        const matchesSearch = title.includes(gameSearch.trim().toLowerCase());
+        const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => (a?.title || '').localeCompare(b?.title || ''));
+  }, [safeGames, gameSearch, statusFilter]);
 
   const activeFilterLabel = statusFilter === 'ALL' ? 'ALL GAMES' : statusFilter.toUpperCase();
-  const statusClass = (status: Game['status']) => `status-${status.toLowerCase().replace(' ', '-')}`;
+  const statusClass = (status?: string | null) => status ? `status-${status.toLowerCase().replace(/\s+/g, '-')}` : 'status-planned';
   const attachedProofs = (game?.proofs && game.proofs.length > 0
     ? game.proofs
     : [game?.proof_clear, game?.proof_credits, game?.proof_achievement].filter(Boolean) as string[]
@@ -124,9 +133,22 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
           <div className="journal-section-heading">
             <div className="quest-heading-copy">
               <div className="quest-header-stats flex items-center justify-between gap-2 mb-2.5">
-                <span className="quest-count-label">
-                  {games.length} {games.length === 1 ? 'GAME' : 'GAMES'} RECORDED
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="quest-count-label">
+                    {games.length} {games.length === 1 ? 'GAME' : 'GAMES'} RECORDED
+                  </span>
+                  {onRefresh && (
+                    <button
+                      type="button"
+                      onClick={onRefresh}
+                      className="p-1 rounded text-zinc-400 hover:text-[#FFDE00] transition-colors"
+                      title="Sync with cloud database"
+                      aria-label="Sync with cloud database"
+                    >
+                      <RefreshCw size={11} className={isSyncing ? 'animate-spin text-[#FFDE00]' : ''} />
+                    </button>
+                  )}
+                </div>
                 <span className="zzz-cleared-pill">
                   <Zap size={11} className="fill-[#FFDE00] text-[#FFDE00] shrink-0" />
                   <span>CLEARED:</span>
@@ -221,7 +243,7 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                       {item.title}
                     </strong>
                     <span className={`quest-status ${statusClass(item.status)}`}>
-                      {item.status.toUpperCase()}
+                      {(item.status || 'PLANNED').toUpperCase()}
                     </span>
                   </div>
                   <div className="quest-meta-row">
@@ -394,25 +416,30 @@ export const JournalDashboard: React.FC<JournalDashboardProps> = ({
                       </div>
                     </div>
 
-                    {/* Tactical Duration Meter Card */}
+                    {/* Tactical Duration Telemetry Card */}
                     <div className="duration-card">
                       <div className="duration-card-head">
-                        <Clock size={11} className="text-[#FFDE00]" />
-                        <span className="duration-card-label">TOTAL DURATION</span>
+                        <div className="duration-head-left">
+                          <div className="milestone-icon-pill">
+                            <Clock size={12} className="text-[#FFDE00]" />
+                          </div>
+                          <span className="duration-card-label">TOTAL DURATION</span>
+                        </div>
+                        <span className={`duration-badge ${game.status === 'Cleared' ? 'badge-cleared' : 'badge-active'}`}>
+                          {game.status === 'Cleared' ? 'RECORDED' : 'LIVE'}
+                        </span>
                       </div>
                       <div className="duration-card-body">
                         <span className="duration-card-val">
-                          {game.duration_days ? game.duration_days : '—'}
+                          {game.duration_days !== null && game.duration_days !== undefined ? game.duration_days : '—'}
                         </span>
                         <span className="duration-card-unit">
                           {game.duration_days === 1 ? 'DAY' : 'DAYS'}
                         </span>
                       </div>
-                      <div className="duration-card-ticker">
-                        <span className="ticker-seg active" />
-                        <span className="ticker-seg active" />
-                        <span className="ticker-seg active" />
-                        <span className="ticker-seg" />
+                      <div className="duration-card-footer">
+                        <span className={`milestone-sub-dot ${game.status === 'Cleared' ? 'dot-cleared' : 'dot-active'}`} />
+                        <span>{game.status === 'Cleared' ? 'Completed Campaign' : 'Expedition Ongoing'}</span>
                       </div>
                     </div>
                   </div>
